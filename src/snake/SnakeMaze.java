@@ -20,10 +20,12 @@ public class SnakeMaze implements ActionListener, KeyListener {
     public Render render;
     public Timer timer = new Timer(10, this);
     public ArrayList<Point> snakeParts = new ArrayList<Point>();
+    public ArrayList<Point> mazeParts = new ArrayList<Point> ();
     public static final int UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3, SCALE = 40;
     public int direction = DOWN, score, tailLength;
     public int[] cherryCoord = new int[2];
-    public double ticks;
+    public int[] mazeCoord = new int[2];
+    public double speed, ticks;
     public boolean over, paused, mazeConflict;
     public Point head, cherry;
     public Random random;
@@ -47,16 +49,33 @@ public class SnakeMaze implements ActionListener, KeyListener {
         over = false;
         paused = false;
         score = 0;
+        speed = 5;
         tailLength = 0;
         direction = DOWN;
-        mazeConflict = false;
         head = new Point(0,-1);
         random = new Random();
         snakeParts.clear();
         cherryCoord = generateCherry();
         cherry = new Point(cherryCoord[0], cherryCoord[1]);
         snakeParts.add(new Point(head.x, head.y));
+        mazeParts.clear();
+
+        for (int i = 0; i < 10; i++) {
+            mazeCoord = generateMazePart();
+            mazeParts.add(new Point(mazeCoord[0], mazeCoord[1]));        }
+
         timer.start();
+    }
+
+    public int[] generateMazePart () {
+        int[] coord = new int[2];
+        do {
+            coord[0] = random.nextInt(frame.getWidth() / SCALE - 1);
+            coord[1] = random.nextInt(frame.getHeight() / SCALE - 3);
+        }
+        while (coord[1] < 3);
+
+        return coord;
     }
 
     public void actionPerformed(ActionEvent arg0) {
@@ -65,16 +84,18 @@ public class SnakeMaze implements ActionListener, KeyListener {
         if (!over && !paused)
             ticks+= 0.5;
 
-        if (ticks % 5 == 0 && head != null && !over && !paused) {
+        if (ticks % speed == 0 && head != null && !over && !paused) {
             snakeParts.add(new Point(head.x, head.y));
 
-            if (direction == UP && head.y - 1 >= 0 && noTailAt(head.x, head.y - 1))
+            if (direction == UP && head.y - 1 >= 0 && noTailAt(head.x, head.y - 1) && noMazeAt(head.x, head.y - 1))
                 head = new Point(head.x, head.y - 1);
-            else if (direction == DOWN && head.y + 1 < frame.getHeight() / SCALE && noTailAt(head.x, head.y + 1))
+            else if (direction == DOWN && head.y + 1 < frame.getHeight() / SCALE && noTailAt(head.x, head.y + 1) &&
+                    noMazeAt(head.x, head.y + 1))
                 head = new Point(head.x, head.y + 1);
-            else if (direction == LEFT && head.x - 1 >= 0 && noTailAt(head.x - 1, head.y))
+            else if (direction == LEFT && head.x - 1 >= 0 && noTailAt(head.x - 1, head.y) && noMazeAt(head.x - 1, head.y))
                 head = new Point(head.x - 1, head.y);
-            else if (direction == RIGHT && head.x + 1 < frame.getWidth() / SCALE && noTailAt(head.x + 1, head.y))
+            else if (direction == RIGHT && head.x + 1 < frame.getWidth() / SCALE && noTailAt(head.x + 1, head.y) &&
+                    noMazeAt(head.x + 1, head.y))
                 head = new Point(head.x + 1, head.y);
             else {
                 over = true;
@@ -91,11 +112,24 @@ public class SnakeMaze implements ActionListener, KeyListener {
                     cherry.setLocation(cherryCoord[0], cherryCoord[1]);
                 }
             }
+
+            if (tailLength != 0 && tailLength%5 == 0) {
+                if (5 - tailLength/10.0 > 1.5)
+                    speed = 5 - tailLength/10.0;
+            }
         }
     }
 
     public boolean noTailAt(int x, int y) {
         for (Point point: snakeParts) {
+            if (point.getX() == x && point.getY() == y)
+                return false;
+        }
+        return true;
+    }
+
+    public boolean noMazeAt(int x, int y) {
+        for (Point point: mazeParts) {
             if (point.getX() == x && point.getY() == y)
                 return false;
         }
@@ -109,6 +143,10 @@ public class SnakeMaze implements ActionListener, KeyListener {
             conflict = false;
             coord[0] = random.nextInt(frame.getWidth() / SCALE - 1);
             coord[1] = random.nextInt(frame.getHeight() / SCALE - 3);
+            for (Point point : mazeParts) {
+                if (point.getX() == coord[0] && point.getY() == coord[1])
+                    conflict = true;
+            }
         }
         while (conflict);
 

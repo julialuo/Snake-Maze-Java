@@ -23,6 +23,11 @@ public class Render extends JPanel {
         }
         g.fillRect(snakeGame.head.x * SnakeMaze.SCALE, snakeGame.head.y * SnakeMaze.SCALE, SnakeMaze.SCALE, SnakeMaze.SCALE);
 
+        g.setColor(Color.GRAY);
+        for (Point point : snakeGame.mazeParts) {
+            g.fillRect(point.x * SnakeMaze.SCALE, point.y * SnakeMaze.SCALE, SnakeMaze.SCALE, SnakeMaze.SCALE);
+        }
+
         g.setColor(Color.RED);
         g.fillRect(snakeGame.cherry.x * SnakeMaze.SCALE, snakeGame.cherry.y * SnakeMaze.SCALE, SnakeMaze.SCALE, SnakeMaze.SCALE);
 
